@@ -1,0 +1,39 @@
+# .NET
+bin/
+obj/
+out/
+publish/
+*.user
+*.suo
+.vs/
+artifacts/
+
+# Конфиг с локальным путём к игре
+config.json
+
+# Отчёты запусков
+report.json
+report.html
+
+# AI-инструменты и агенты
+.kilo/
+.kilocode/
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.roo/
+.cline/
+.clinerules
+.continue/
+.codex/
+.gemini/
+.opencode/
+.agent/
+.aider*
+.superpowers/
+docs/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.github/copilot-instructions.md
