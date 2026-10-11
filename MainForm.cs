@@ -18,6 +18,10 @@ public sealed class MainForm : Form
     private readonly Label _status;
     private readonly TextBox _pathBox;
     private readonly Button _pickButton;
+    private readonly TabControl _profileTabs;
+    private ProfileEditorPanel _cpuEditor = null!;
+    private ProfileEditorPanel _gpuEditor = null!;
+    private int _monitorWidth, _monitorHeight;
     private CancellationTokenSource? _cts;
     private bool _running;
 
@@ -25,9 +29,11 @@ public sealed class MainForm : Form
     {
         Text = "WukongBenchAuto — автоматический запуск Black Myth: Wukong Benchmark";
         Font = new Font("Segoe UI", 9.5f);
-        Size = new Size(860, 620);
-        MinimumSize = new Size(720, 500);
+        Size = new Size(880, 760);
+        MinimumSize = new Size(760, 620);
         StartPosition = FormStartPosition.CenterScreen;
+
+        (_monitorWidth, _monitorHeight, _) = HardwareInfo.GetPrimaryMonitor();
 
         _log = new TextBox
         {
@@ -77,6 +83,22 @@ public sealed class MainForm : Form
         };
         _pickButton.Click += (_, _) => PickFolder();
 
+        // Вкладки-редакторы профилей CPU и GPU.
+        _profileTabs = new TabControl
+        {
+            Dock = DockStyle.Top,
+            Height = 420,
+        };
+        BuildProfileTabs();
+
+        var resetButton = new Button
+        {
+            Text = "Сбросить профили к стандартным",
+            Dock = DockStyle.Top,
+            Height = 30,
+        };
+        resetButton.Click += (_, _) => { BuildProfileTabs(); _status.Text = "Профили сброшены к стандартным."; };
+
         var pathPanel = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
@@ -113,11 +135,32 @@ public sealed class MainForm : Form
         Controls.Add(_log);
         Controls.Add(pathPanel);
         Controls.Add(statusPanel);
+        Controls.Add(resetButton);
+        Controls.Add(_profileTabs);
         Controls.Add(buttonsPanel);
 
         AcceptButton = _runButton;
 
         Load += (_, _) => ResolvePath();
+    }
+
+    private void BuildProfileTabs()
+    {
+        _profileTabs.TabPages.Clear();
+
+        var cpuProfile = Profiles.Cpu(_monitorWidth, _monitorHeight);
+        var gpuProfile = Profiles.Gpu(_monitorWidth, _monitorHeight);
+
+        _cpuEditor = new ProfileEditorPanel("CPU-профиль (минимум графики)", cpuProfile);
+        _gpuEditor = new ProfileEditorPanel("GPU-профиль (максимум графики)", gpuProfile);
+
+        var cpuTab = new TabPage("CPU-профиль");
+        cpuTab.Controls.Add(_cpuEditor);
+        var gpuTab = new TabPage("GPU-профиль");
+        gpuTab.Controls.Add(_gpuEditor);
+
+        _profileTabs.TabPages.Add(cpuTab);
+        _profileTabs.TabPages.Add(gpuTab);
     }
 
     private void ResolvePath()
@@ -228,21 +271,26 @@ public sealed class MainForm : Form
         _status.Text = "Выполняется...";
         Log($"Папка бенчмарка: {gameDir}");
 
+        // Профили берём из редактора (панели могут быть изменены пользователем).
+        var cpuProfile = _cpuEditor.ToProfile(
+            "CPU", "Пользовательский CPU-профиль", rtxLevel: 1, qualityLevel: 1);
+        var gpuProfile = _gpuEditor.ToProfile(
+            "GPU", "Пользовательский GPU-профиль", rtxLevel: 3, qualityLevel: 5);
+
         var orchestrator = new BenchmarkOrchestrator(gameDir);
         orchestrator.Status += msg => BeginInvoke(() => Log(msg));
 
         orchestrator.BackupSettings();
-        var (w, h, _) = HardwareInfo.GetPrimaryMonitor();
 
         try
         {
-            var cpu = await orchestrator.RunAsync(Profiles.Cpu(w, h), ct);
+            var cpu = await orchestrator.RunAsync(cpuProfile, ct);
             BeginInvoke(() => Log($"[CPU] Готово: avg {cpu.Summary.FpsAvg:0.#} FPS, CPU frame {cpu.Summary.CpuFrameTimeMs:0.0} ms, GPU frame {cpu.Summary.GpuFrameTimeMs:0.0} ms"));
 
             // Пауза между прогонами: Steam должен отпустить предыдущий запуск.
             await Task.Delay(3000, ct);
 
-            var gpu = await orchestrator.RunAsync(Profiles.Gpu(w, h), ct);
+            var gpu = await orchestrator.RunAsync(gpuProfile, ct);
             BeginInvoke(() => Log($"[GPU] Готово: avg {gpu.Summary.FpsAvg:0.#} FPS, CPU frame {gpu.Summary.CpuFrameTimeMs:0.0} ms, GPU frame {gpu.Summary.GpuFrameTimeMs:0.0} ms"));
 
             var report = new Report
