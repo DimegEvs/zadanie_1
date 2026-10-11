@@ -75,14 +75,23 @@ public sealed class BenchmarkOrchestrator(string gameDirectory)
         Directory.CreateDirectory(HistoryDirectory);
         var known = Directory.GetFiles(HistoryDirectory).ToHashSet();
 
+        // Гасим процессы от предыдущих прогонов, чтобы Steam запустил игру заново.
+        BenchmarkLauncher.KillBenchmarkProcesses();
+        await Task.Delay(2000, ct);
+
         Status?.Invoke($"[{profile.Name}] Запускаю бенчмарк...");
         _launcher.Launch();
 
         Status?.Invoke($"[{profile.Name}] Жду окно игры...");
         using var process = await _launcher.WaitForGameWindowAsync(TimeSpan.FromMinutes(3), ct);
 
-        Status?.Invoke($"[{profile.Name}] Автоматизирую меню...");
+        Status?.Invoke($"[{profile.Name}] Автоматизирую меню (игра догружается ~30 с, не трогайте мышь)...");
         await MenuAutomation.StartBenchmarkAsync(process.MainWindowHandle, ct);
+
+        if (process.HasExited)
+            throw new InvalidOperationException(
+                $"[{profile.Name}] Бенчмарк закрылся до запуска теста. " +
+                "Проверьте, что окно игры активно во время автоматизации (не свёрнуто) и что разрешение профиля поддерживается.");
 
         using var sampler = new LoadSampler();
         Status?.Invoke($"[{profile.Name}] Тест идёт...");
@@ -97,6 +106,12 @@ public sealed class BenchmarkOrchestrator(string gameDirectory)
                 throw new TimeoutException(
                     $"[{profile.Name}] Бенчмарк не завершился за {limit.TotalMinutes:0} минут.");
             }
+
+            // Процесс умер, а результата нет — тест не был запущен либо вылетел.
+            if (process.HasExited && FindNewResult(known) is null)
+                throw new InvalidOperationException(
+                    $"[{profile.Name}] Бенчмарк завершился без результатов — " +
+                    "вероятно, автоматизация меню не сработала (окно было неактивно или игра ещё грузилась).");
 
             await Task.Delay(1500, ct);
             sampler.Sample();

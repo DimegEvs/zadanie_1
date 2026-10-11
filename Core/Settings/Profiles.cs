@@ -6,13 +6,14 @@ namespace WukongBenchAuto.Core.Settings;
 /// Профили настроек для CPU- и GPU-проходов.
 ///
 /// Обоснование:
-/// - CPU-проход: минимальное разрешение и масштаб рендера отсекают GPU-нагрузку,
-///   при этом дальность прорисовки, растительность, эффекты, материалы и тени (CPU-зависимые
-///   системы: culling, анимация, симуляция, draw calls) держатся на максимуме.
+/// - CPU-проход: минимальное разрешение (1280×720), масштаб рендера 25% и ВСЕ
+///   качества графики на минимуме отсекают GPU-нагрузку, чтобы FPS почти полностью
+///   зависел от процессора. CPU при этом всё равно остаётся главным ограничителем:
+///   частота кадров определяется скоростью CPU (движок, сцена, симуляция), а не GPU.
 /// - GPU-проход: нативное разрешение монитора, масштаб рендера 100, максимальные
 ///   качества и трассировка лучей. Апскейлинг и генерация кадров отключены,
 ///   чтобы нагрузка не занижалась.
-/// В обоих проходах VSync и лимит FPS выключены (t.MaxFPS=0, bUseVSync=False).
+/// В обоих проходах VSync и лимит FPS выключены (bUseVSync=False, FrameRateLimit=0).
 /// </summary>
 public static class Profiles
 {
@@ -24,17 +25,18 @@ public static class Profiles
         ResolutionHeight = 720,
         ImageQuality = 25,
         QualityLevel = 1,
-        ViewDistance = 5,
+        ViewDistance = 1,
         AntiAliasing = 1,
         PostProcessing = 1,
-        ShadowQuality = 5,
+        ShadowQuality = 1,
         TextureQuality = 1,
-        MaterialQuality = 5,
-        VegetationQuality = 5,
-        FxQuality = 5,
+        MaterialQuality = 1,
+        VegetationQuality = 1,
+        FxQuality = 1,
         GlobalIllumination = 1,
         ReflectionQuality = 1,
         Rtx = 0,
+        RtxLevel = 1,
         Dlss = 0,
         InsertFrame = 0,
         MotionBlur = 0,

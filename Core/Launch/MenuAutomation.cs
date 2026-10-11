@@ -77,20 +77,21 @@ public static partial class MenuAutomation
     /// <summary>Прогнать меню бенчмарка до запуска теста.</summary>
     public static async Task StartBenchmarkAsync(IntPtr hwnd, CancellationToken ct)
     {
+        // Игра после появления окна ещё грузится (логотип, шейдеры) — даём догрузиться.
         SetForegroundWindow(hwnd);
-        await Task.Delay(1500, ct);
+        await Task.Delay(30000, ct);
 
         // 1. "Нажмите любую клавишу" — Space.
         PressSpace();
-        await Task.Delay(1000, ct);
+        await Task.Delay(2500, ct);
 
         // 2. "Тест быстродействия".
         Click(hwnd, MenuItemX, MenuItemY);
-        await Task.Delay(1000, ct);
+        await Task.Delay(2500, ct);
 
         // 3. "Подтвердить".
         Click(hwnd, ConfirmX, ConfirmY);
-        await Task.Delay(1000, ct);
+        await Task.Delay(2500, ct);
     }
 
     private static void PressSpace()

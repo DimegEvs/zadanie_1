@@ -77,8 +77,10 @@ public class IniProfileApplierTests
         var profile = Profiles.Cpu(1280, 720);
         var result = IniProfileApplier.Apply(SampleIni, profile);
 
-        Assert.Contains("sg.ViewDistanceQuality=5", result);
+        Assert.Contains("sg.ViewDistanceQuality=1", result);
         Assert.Contains("sg.TextureQuality=1", result);
+        Assert.Contains("sg.ShadowQuality=1", result);
+        Assert.Contains("sg.FoliageQuality=1", result);
         Assert.Contains("(\"QualityLevel\", \"1\")", result);
     }
 
@@ -112,23 +114,29 @@ public class IniProfileApplierTests
         var snap = IniProfileApplier.Snapshot(Profiles.Cpu(1280, 720));
         Assert.Equal("25", snap["ImageQuality"]);
         Assert.Equal("1280", snap["ResolutionSizeX"]);
-        Assert.Equal("5", snap["UI:ViewDistance"]);
+        Assert.Equal("1", snap["UI:ViewDistance"]);
     }
 }
 
 public class ProfilesTests
 {
     [Fact]
-    public void CpuProfile_MinimalGpuLoad_MaxCpuLoad()
+    public void CpuProfile_MinimalGpuLoad_AllQualityMinimal()
     {
         var p = Profiles.Cpu(2560, 1440);
         Assert.Equal(0, p.Rtx);
         Assert.Equal(0, p.InsertFrame);
         Assert.Equal(0, p.Dlss);
         Assert.Equal(25, p.ImageQuality);
-        Assert.Equal(5, p.ViewDistance);
-        Assert.Equal(5, p.VegetationQuality);
-        Assert.Equal(5, p.FxQuality);
+        Assert.Equal(1, p.TextureQuality);
+        Assert.Equal(1, p.ShadowQuality);
+        Assert.Equal(1, p.MaterialQuality);
+        Assert.Equal(1, p.VegetationQuality);
+        Assert.Equal(1, p.FxQuality);
+        Assert.Equal(1, p.GlobalIllumination);
+        Assert.Equal(1, p.ReflectionQuality);
+        Assert.Equal(1, p.AntiAliasing);
+        Assert.Equal(1, p.PostProcessing);
         Assert.Equal(0, p.VSync);
         Assert.Equal(0, p.FrameRateLimit);
     }

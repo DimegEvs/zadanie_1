@@ -103,6 +103,11 @@ public static partial class SteamLocator
         return null;
     }
 
-    private static string NormalizePath(string raw) =>
-        raw.TrimEnd('\\', '/').Replace('/', Path.DirectorySeparatorChar);
+    private static string NormalizePath(string raw)
+    {
+        var trimmed = raw.Trim().TrimEnd('\\', '/').Replace('/', Path.DirectorySeparatorChar);
+        // VDF хранит двойные бэкслэши: E:\\SteamLibrary → E:\SteamLibrary.
+        var unescaped = trimmed.Replace("\\\\", "\\");
+        return Path.GetFullPath(unescaped);
+    }
 }
