@@ -61,7 +61,7 @@ dotnet run --configuration Release -- --cli
    что в папке есть `b1_benchmark.exe` и `b1\Binaries\Win64\b1-Win64-Shipping.exe`:
 
    ```powershell
-   .\WukongBenchAuto.exe --cli --path "E:\SteamLibrary\steamapps\common\Black Myth Wukong Benchmark Tool"
+   .\WukongBenchAuto.exe --cli --path "D:\SteamLibrary\steamapps\common\Black Myth Wukong Benchmark Tool"
    ```
 
 2. **Конфиг** `config.json` рядом с exe — путь, сохранённый при прошлом запуске.
